@@ -1,6 +1,6 @@
 {
   "name": "@epistery/cli",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "description": "The epistery command: a device's rivet on the command line — bot-authenticated requests, and epistery.com sessions served locally as a member (its own key, sealed and signed on the device).",
   "bin": {
