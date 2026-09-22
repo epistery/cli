@@ -439,8 +439,16 @@ epistery curl -w prod.example.com https://prod.example.com/api/status
 
 ## Integration
 
-The CLI is designed to work with:
-- **Rhonda** - Wiki with Epistery authentication
-- **Any Epistery-enabled app** - Just initialize and curl!
+Any epistery host is a client of this command:
 
-Server-side apps should implement bot authentication handler (see Rhonda's account-server for example).
+- **epistery.com** — sessions. `epistery mcp <origin>/p/<kind>/<owner>/<session>`
+  serves a session's tools on the device, as the rivet: its own key, sealed and signed
+  locally. The rivet must be granted into the session by address.
+- **epistery.host** — hosted domains and their agents. `epistery curl` signs requests
+  with bot auth; `epistery mcp <site>` bridges the site's `/mcp`.
+- **Any other epistery host** — a server that attaches the
+  [`epistery`](https://github.com/rootz-global/epistery) middleware verifies bot auth
+  itself and presents the caller as `req.episteryClient`; nothing further to build.
+
+Bot auth needs a 2.3+ server: each signature is bound to the request it authorises
+(method, URI, host, body digest, timestamp, nonce).
