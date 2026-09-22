@@ -1,0 +1,31 @@
+{
+  "name": "@epistery/cli",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "The epistery command: a device's rivet on the command line — bot-authenticated requests, and epistery.com sessions served locally as a member (its own key, sealed and signed on the device).",
+  "bin": {
+    "epistery": "./epistery.mjs"
+  },
+  "files": [
+    "epistery.mjs",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/epistery/cli.git"
+  },
+  "homepage": "https://epistery.com",
+  "author": "Rootz Corp",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@epistery/plugins": "github:epistery/plugins",
+    "dotenv": "^17.2.2",
+    "epistery": "^2.3.14",
+    "ethers": "^5.8.0",
+    "node-fetch": "^3.3.2"
+  }
+}
