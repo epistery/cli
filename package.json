@@ -18,6 +18,9 @@
   "homepage": "https://epistery.com",
   "author": "Rootz Corp",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "engines": {
     "node": ">=20"
   },
