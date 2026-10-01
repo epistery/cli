@@ -137,20 +137,28 @@ export async function serve({ url, wallet, input = process.stdin, output = proce
   const seal = new Map();   // tool name → { fields, derive, contentField }
   let contentField = 'text';
 
-  async function handle(msg) {
-    if (msg.method === 'tools/list') {
-      const res = await call(msg);
-      for (const t of res?.result?.tools || []) {
-        seal.set(t.name, { fields: t.epistery?.seal || [], derive: t.epistery?.derive || {}, contentField: t.epistery?.contentField || 'text' });
-        if (t.epistery?.contentField) contentField = t.epistery.contentField;
-        delete t.epistery;
-      }
-      return res;
+  // The host's declarations for every tool; learned from a tools/list, which is
+  // forwarded to the client with the declaration stripped.
+  async function learn(msg) {
+    const res = await call(msg || { jsonrpc: '2.0', id: 'epistery-learn', method: 'tools/list' });
+    for (const t of res?.result?.tools || []) {
+      seal.set(t.name, { fields: t.epistery?.seal || [], derive: t.epistery?.derive || {}, contentField: t.epistery?.contentField || 'text' });
+      if (t.epistery?.contentField) contentField = t.epistery.contentField;
+      delete t.epistery;
     }
+    return res;
+  }
+
+  async function handle(msg) {
+    if (msg.method === 'tools/list') return learn(msg);
     if (msg.method !== 'tools/call') return call(msg);
 
     const name = msg.params?.name;
-    const spec = seal.get(name) || { fields: [], derive: {}, contentField };
+    // A call before any list: the declaration is the host's to give and this
+    // bridge's to know — it is fetched, never assumed to be "seal nothing".
+    if (!seal.has(name)) await learn();
+    const spec = seal.get(name);
+    if (!spec) throw new Error(`unknown tool ${name}: the host lists no such tool for this session`);
     const args = { ...(msg.params?.arguments || {}) };
     // What only the plaintext can yield (a wiki's _refs) is derived here, by
     // the manifest's declaration, before the plaintext is sealed away.
