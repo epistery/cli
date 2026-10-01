@@ -166,10 +166,20 @@ export async function serve({ url, wallet, input = process.stdin, output = proce
 
     // The records the route built, signed and written by this device; then the
     // events it would have broadcast, announced once the records are there.
+    // Bytes the route would have uploaded are uploaded here first, signed, and
+    // the real url replaces the route's placeholder wherever it appears.
+    const urls = new Map();
     for (const w of meta.writes || []) {
-      if (w.op === 'put') await relay.storagePut(ref.owner, w.path, w.value);
+      if (w.op !== 'upload') continue;
+      const up = await relay.uploadBlob(ref.owner, Buffer.from(w.bytes, 'base64'), { session: ref.id });
+      urls.set(w.ref, up.url);
+    }
+    const resolved = (v) => urls.size ? JSON.parse([...urls].reduce((t, [p, u]) => t.split(p).join(u), JSON.stringify(v))) : v;
+    for (const w of meta.writes || []) {
+      if (w.op === 'put') await relay.storagePut(ref.owner, w.path, resolved(w.value));
       else if (w.op === 'delete') await relay.storageDelete(ref.owner, w.path);
     }
+    meta.body = resolved(meta.body);
     if (meta.events?.length) await call({ jsonrpc: '2.0', method: 'epistery/announce', params: { events: meta.events } });
 
     // The answer, opened here with this device's key.

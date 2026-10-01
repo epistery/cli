@@ -2,7 +2,7 @@
   "name": "@epistery/cli",
   "version": "1.1.1",
   "type": "module",
-  "description": "The epistery command: a device's rivet on the command line — bot-authenticated requests, and epistery.com sessions used as a member (the host dispatches; this device seals, opens and signs with its own key).",
+  "description": "The epistery command: a device's rivet on the command line \u2014 bot-authenticated requests, and epistery.com sessions used as a member (the host dispatches; this device seals, opens and signs with its own key).",
   "bin": {
     "epistery": "./epistery.mjs"
   },
@@ -26,7 +26,7 @@
     "node": ">=20"
   },
   "dependencies": {
-    "@epistery/client-lib": "^1.6.1",
+    "@epistery/client-lib": "^1.7.0",
     "dotenv": "^17.2.2",
     "epistery": "^2.4.6",
     "ethers": "^5.8.0"
