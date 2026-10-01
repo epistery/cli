@@ -31,6 +31,7 @@ import { Config, chainReader } from 'epistery';
 import { DsGroup } from '@epistery/client-lib/ds-group';
 import { cryptoStack } from '@epistery/client-lib/treekem-kdf';
 import { sealedKeys, openDeep } from '@epistery/client-lib/sealed';
+import { deriveFields } from '@epistery/client-lib/derive';
 import * as cipher from '@epistery/client-lib/cipher';
 import { relayClient } from '@epistery/client-lib/relay';
 import { keyRequest } from '@epistery/client-lib/session-keys';
@@ -131,15 +132,16 @@ export async function serve({ url, wallet, input = process.stdin, output = proce
     return text ? JSON.parse(text) : null;
   }
 
-  // What each tool asks this device to seal — learned from the host's tools/list.
-  const seal = new Map();   // tool name → { fields, contentField }
+  // What each tool asks this device to derive from its plaintext and then seal
+  // — learned from the host's tools/list.
+  const seal = new Map();   // tool name → { fields, derive, contentField }
   let contentField = 'text';
 
   async function handle(msg) {
     if (msg.method === 'tools/list') {
       const res = await call(msg);
       for (const t of res?.result?.tools || []) {
-        seal.set(t.name, { fields: t.epistery?.seal || [], contentField: t.epistery?.contentField || 'text' });
+        seal.set(t.name, { fields: t.epistery?.seal || [], derive: t.epistery?.derive || {}, contentField: t.epistery?.contentField || 'text' });
         if (t.epistery?.contentField) contentField = t.epistery.contentField;
         delete t.epistery;
       }
@@ -148,8 +150,11 @@ export async function serve({ url, wallet, input = process.stdin, output = proce
     if (msg.method !== 'tools/call') return call(msg);
 
     const name = msg.params?.name;
-    const spec = seal.get(name) || { fields: [], contentField };
+    const spec = seal.get(name) || { fields: [], derive: {}, contentField };
     const args = { ...(msg.params?.arguments || {}) };
+    // What only the plaintext can yield (a wiki's _refs) is derived here, by
+    // the manifest's declaration, before the plaintext is sealed away.
+    deriveFields(spec.derive, args);
     if (spec.fields.some((f) => typeof args[f] === 'string')) {
       await loadKeys();
       if (!keys.ready) throw new Error(`cannot seal for ${name}: this device holds no key for the session yet`);

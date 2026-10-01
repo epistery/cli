@@ -26,7 +26,7 @@
     "node": ">=20"
   },
   "dependencies": {
-    "@epistery/client-lib": "^1.7.0",
+    "@epistery/client-lib": "^1.7.1",
     "dotenv": "^17.2.2",
     "epistery": "^2.5.2",
     "ethers": "^5.8.0"
