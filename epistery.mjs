@@ -667,7 +667,7 @@ async function performCurl(options) {
       const url = new URL(options.url);
       const baseUrl = `${url.protocol}//${url.host}`;
 
-      let session = wallet.getSession(baseUrl);
+      let session = await wallet.getSession(baseUrl);
 
       if (!session) {
         if (options.verbose) {
@@ -687,7 +687,7 @@ async function performCurl(options) {
           console.error("");
         }
 
-        session = wallet.getSession(baseUrl);
+        session = await wallet.getSession(baseUrl);
       }
 
       if (session && session.cookie) {
