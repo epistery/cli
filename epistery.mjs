@@ -770,18 +770,15 @@ async function performMcp(args) {
 
   const wallet = await CliWallet.load(domain);
 
-  // A console SESSION (<origin>/p/<kind>/<owner>/<id>) is not proxied: its /mcp
-  // takes access keys, and this rivet is a member in its own right. Its tools
-  // are served here, as this rivet, by @epistery/plugins/local-mcp — which
-  // derives the session key from the rivet's own leaf and seals and signs
-  // locally, so the server sees only ciphertext and signatures.
+  // A console SESSION (<origin>/p/<kind>/<owner>/<id>): this rivet is a member in
+  // its own right. The host dispatches the session's tools; this device seals,
+  // opens and signs with its own key (member.mjs) — nothing of the kind is
+  // installed here, and the host sees only ciphertext and signatures.
   if (new URL(mcpUrl).pathname.startsWith('/p/')) {
-    const local = await import('@epistery/plugins/local-mcp');
-    await local.serve({ url: mcpUrl, wallet });
+    const member = await import('./member.mjs');
+    await member.serve({ url: mcpUrl, wallet });
     return;
   }
-
-  const fetch = (await import('node-fetch')).default;
 
   // All log output to stderr so stdout stays clean for MCP JSON-RPC
   process.stderr.write(`[epistery-mcp] Bridge: ${wallet.address} -> ${mcpUrl}\n`);

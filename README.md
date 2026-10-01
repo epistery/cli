@@ -16,10 +16,14 @@ keys live in `~/.epistery/{domain}/config.ini`, cleartext and owner-only — see
 ## A session, as its own member
 
 A rivet granted into a session by address contributes as itself. Pointed at the
-session, `epistery mcp` runs that session's own tools on the device: it derives
-the session key from the rivet's own leaf, decrypts what it reads and seals what
-it writes before anything leaves the device, and asks for its key the way a
-browser device does if it has none yet.
+session, `epistery mcp` is a member of it with nothing installed but the public
+crypto: the host dispatches the session's tools (it knows every kind and every
+record shape), and this device seals what it writes and opens what it reads
+with the session key from its own leaf, signs each record the host prepares and
+writes it to the relay itself, then announces it. The host sees ciphertext and
+signatures only, and a hundredth kind costs this command nothing. A device
+with no key yet asks for one the way a browser device does, and is seated by
+any key-holder that is online.
 
 ```bash
 claude mcp add --transport stdio <owner>-<session> -- \
@@ -442,8 +446,8 @@ epistery curl -w prod.example.com https://prod.example.com/api/status
 Any epistery host is a client of this command:
 
 - **epistery.com** — sessions. `epistery mcp <origin>/p/<kind>/<owner>/<session>`
-  serves a session's tools on the device, as the rivet: its own key, sealed and signed
-  locally. The rivet must be granted into the session by address.
+  uses a session's tools as the rivet: the host dispatches, the device seals, opens
+  and signs with its own key. The rivet must be granted into the session by address.
 - **epistery.host** — hosted domains and their agents. `epistery curl` signs requests
   with bot auth; `epistery mcp <site>` bridges the site's `/mcp`.
 - **Any other epistery host** — a server that attaches the
