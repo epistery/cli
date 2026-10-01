@@ -117,6 +117,7 @@ Make authenticated HTTP requests using bot authentication (signs each request wi
 - `-d, --data <data>` - Request body: a quoted JSON string, or `@path` to read the body from a file
 - `-H, --header <header>` - Additional headers
 - `-v, --verbose` - Show detailed output
+- `--session` - The cookie session instead of the Bot header: a key exchange with the host, then the `_epistery` cookie on the request (what a browser does)
 
 **Examples:**
 ```bash
@@ -283,13 +284,12 @@ import { CliWallet } from 'epistery';
 // Load domain wallet
 const wallet = CliWallet.load('localhost');  // or CliWallet.load() for default
 
-// Create bot auth header
-const authHeader = await wallet.createBotAuthHeader();
+// The Bot header is bound to the request it authorizes — method, URL,
+// audience host, body digest — so it must be built for this exact call.
+const url = 'https://localhost:4080/wiki/Home';
+const authHeader = await wallet.createBotAuthHeader({ method: 'GET', url });
 
-// Make request
-const response = await fetch('https://localhost:4080/wiki/Home', {
-  headers: { 'Authorization': authHeader }
-});
+const response = await fetch(url, { headers: { 'Authorization': authHeader } });
 ```
 
 ## Configuration Files

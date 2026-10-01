@@ -449,73 +449,12 @@ async function initializeDomain(domain, chainSelector) {
     console.log("Domain initialized successfully");
     console.log("");
 
-    // Try to add to epistery::admin list automatically
-    let addedToAdmin = false;
-    try {
-      // Load config to get agent contract address
-          const config = new Config();
-      await config.setPath(`/${domain}`);
-
-      const contractAddress = config.data?.contract_address;
-
-      if (
-        contractAddress &&
-        contractAddress !== "0x0000000000000000000000000000000000000000"
-      ) {
-        console.log("Adding wallet to epistery::admin list...");
-
-        // Get the server wallet (which was just initialized)
-        const serverWallet = await Utils.InitServerWallet(domain);
-
-        if (serverWallet) {
-          await Utils.AddToWhitelist(
-            serverWallet,
-            "epistery::admin",
-            wallet.address,
-            "CLI Admin",
-            3, // Admin role
-            JSON.stringify({
-              addedBy: serverWallet.address,
-              addedMethod: "cli-initialize",
-              timestamp: new Date().toISOString(),
-            }),
-            contractAddress,
-          );
-          console.log("Added to epistery::admin list");
-          addedToAdmin = true;
-        }
-      } else {
-        console.log("Note: No agent contract configured yet.");
-        console.log("      Run server first, then add to admin list manually.");
-      }
-    } catch (adminError) {
-      console.log("");
-      console.log("Note: Could not add to epistery::admin list automatically.");
-      console.log(`      Reason: ${adminError.message}`);
-      console.log("");
-      console.log("      Common reasons:");
-      console.log("      - Wallet needs funds for gas fees");
-      console.log("      - Agent contract not deployed yet");
-      console.log("      - Network connectivity issues");
-    }
-
     console.log("");
     console.log(
       "Configuration saved to: ~/.epistery/" + domain + "/config.ini",
     );
     console.log("Wallet address: " + wallet.address);
     console.log("");
-
-    if (!addedToAdmin) {
-      console.log(
-        "To add as admin manually (after server is running with funds):",
-      );
-      console.log(
-        `  epistery list add ${domain} epistery::admin ${wallet.address} "Admin" admin`,
-      );
-      console.log("");
-    }
-
     console.log("Set as default with: epistery set-default " + domain);
     console.log("Make requests with: epistery curl https://example.com");
   } catch (error) {
@@ -576,7 +515,7 @@ function parseCurlArgs(args) {
     method: "GET",
     data: null,
     headers: [],
-    bot: true, // Use bot mode by default
+    bot: true, // Bot auth by default; --session asks for the cookie session instead
     verbose: false,
     url: null,
   };
@@ -608,6 +547,13 @@ function parseCurlArgs(args) {
       case "-b":
       case "--bot":
         options.bot = true;
+        break;
+
+      case "--session":
+        // The cookie session: a key exchange with the host, then the `_epistery`
+        // cookie on the request — what a browser does. Without this flag every
+        // request carries the request-bound Bot header.
+        options.bot = false;
         break;
 
       case "-v":
